@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Anton } from "next/font/google";
-import { ArrowRight, Heart, MessageSquare, UserPlus, Lock, CheckCircle2, Circle } from "lucide-react";
+import { ArrowRight, Heart, MessageSquare, UserPlus, Lock, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const anton = Anton({
@@ -18,32 +18,48 @@ function XLogo({ size, className }: { size: number; className?: string }) {
   );
 }
 
-// Tasks: hasInput = has text field, hasInput = false = checkbox only
 const X_URL = "https://x.com/nobodiesclubnft";
 
 const tasks = [
-  { label: "Follow on X",           key: "follow_on_x",       hasInput: false, link: X_URL },
-  { label: "Like the announcement",  key: "like_announcement",  hasInput: false, link: X_URL },
-  { label: "RT x",                   key: "rt_x",               hasInput: false, link: X_URL },
-  { label: "Quote the post",         key: "quote_post",          hasInput: true,  link: null  },
-  { label: "Comment & Tag 2 friend", key: "comment_tag",         hasInput: true,  link: null  },
+  { label: "Follow on X",             key: "follow_on_x",       hasInput: false, link: X_URL },
+  { label: "Like & RT the announcement", key: "like_announcement", hasInput: false, link: X_URL },
+  { label: "Quote the post",           key: "quote_post",         hasInput: true,  link: null  },
+  { label: "Comment & Tag 2 friend",   key: "comment_tag",        hasInput: true,  link: null  },
 ];
 
-const taskIcons = [XLogo, Heart, XLogo, MessageSquare, UserPlus];
+const taskIcons = [XLogo, Heart, MessageSquare, UserPlus];
 
-type Status = "idle" | "loading" | "success" | "error";
+// Per-task click state: "idle" | "verifying" | "done"
+type TaskState = "idle" | "verifying" | "done";
+type SubmitStatus = "idle" | "loading" | "success" | "error";
 
 export default function WhitelistForm() {
-  const [wallet, setWallet]     = useState("");
-  const [inputs, setInputs]     = useState<string[]>(tasks.map(() => ""));
-  const [checks, setChecks]     = useState<boolean[]>(tasks.map(() => false));
-  const [status, setStatus]     = useState<Status>("idle");
-  const [errMsg, setErrMsg]     = useState("");
+  const [wallet, setWallet]       = useState("");
+  const [inputs, setInputs]       = useState<string[]>(tasks.map(() => ""));
+  const [taskStates, setTaskStates] = useState<TaskState[]>(tasks.map(() => "idle"));
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
+  const [errMsg, setErrMsg]       = useState("");
 
-  function toggleCheck(i: number) {
-    const next = [...checks];
-    next[i] = !next[i];
-    setChecks(next);
+  function handleTaskClick(i: number) {
+    const task = tasks[i];
+    if (!task.link || taskStates[i] !== "idle") return;
+
+    // Open X in new tab
+    window.open(task.link, "_blank", "noopener,noreferrer");
+
+    // Set verifying
+    const next = [...taskStates];
+    next[i] = "verifying";
+    setTaskStates(next);
+
+    // Auto-checklist after 2.5s
+    setTimeout(() => {
+      setTaskStates((prev) => {
+        const updated = [...prev];
+        updated[i] = "done";
+        return updated;
+      });
+    }, 2500);
   }
 
   async function handleSubmit() {
@@ -52,16 +68,16 @@ export default function WhitelistForm() {
       return;
     }
 
-    setStatus("loading");
+    setSubmitStatus("loading");
     setErrMsg("");
 
     const payload = {
       evm_address:       wallet.trim(),
-      follow_on_x:       checks[0],
-      like_announcement: checks[1],
-      rt_x:              checks[2],
-      quote_post:        inputs[3].trim() || null,
-      comment_tag:       inputs[4].trim() || null,
+      follow_on_x:       taskStates[0] === "done",
+      like_announcement: taskStates[1] === "done",
+      rt_x:              taskStates[1] === "done", // same action as like
+      quote_post:        inputs[2].trim() || null,
+      comment_tag:       inputs[3].trim() || null,
     };
 
     const { error } = await supabase
@@ -69,14 +85,14 @@ export default function WhitelistForm() {
       .insert([payload]);
 
     if (error) {
-      setStatus("error");
+      setSubmitStatus("error");
       setErrMsg(error.message);
     } else {
-      setStatus("success");
+      setSubmitStatus("success");
     }
   }
 
-  if (status === "success") {
+  if (submitStatus === "success") {
     return (
       <div className="w-full md:max-w-[360px] px-5 py-8 flex flex-col items-center gap-3 text-center">
         <CheckCircle2 size={52} className="text-[#FF3DA5]" />
@@ -107,55 +123,66 @@ export default function WhitelistForm() {
       <div className="mt-2 flex flex-col gap-1.5">
         {tasks.map((task, i) => {
           const Icon = taskIcons[i];
+          const state = taskStates[i];
+          const isDone      = state === "done";
+          const isVerifying = state === "verifying";
+
           return (
             <div
               key={i}
-              className={`group rounded-xl border bg-black p-4 text-base text-white transition-all duration-300 hover:-translate-y-0.5 ${
-                !task.hasInput && checks[i]
-                  ? "border-[#FF3DA5]"
-                  : "border-white/20 hover:border-[#FF3DA5]"
+              onClick={() => handleTaskClick(i)}
+              className={`group rounded-xl border bg-black p-4 text-base text-white transition-all duration-300 select-none ${
+                task.link
+                  ? isDone
+                    ? "border-[#FF3DA5] cursor-default"
+                    : isVerifying
+                    ? "border-white/40 cursor-wait"
+                    : "border-white/20 hover:-translate-y-0.5 hover:border-[#FF3DA5] cursor-pointer"
+                  : "border-white/20 hover:-translate-y-0.5 hover:border-[#FF3DA5]"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Icon size={18} className="text-white" />
-                  {task.link ? (
-                    <a
-                      href={task.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-[#FF3DA5] transition-colors duration-200 underline-offset-2 hover:underline"
-                      style={{ fontFamily: "var(--font-roadgeek)" }}
-                    >
-                      {task.label}
-                    </a>
-                  ) : (
-                    <span style={{ fontFamily: "var(--font-roadgeek)" }}>{task.label}</span>
-                  )}
+                  <Icon
+                    size={18}
+                    className={isDone ? "text-[#FF3DA5]" : "text-white"}
+                  />
+                  <span
+                    className={isDone ? "text-white" : isVerifying ? "text-white/60" : "text-white"}
+                    style={{ fontFamily: "var(--font-roadgeek)" }}
+                  >
+                    {task.label}
+                  </span>
                 </div>
 
-                {task.hasInput ? (
-                  <ArrowRight size={18} className="text-[#FF3DA5] transition-transform duration-300 group-hover:translate-x-0.5" />
+                {/* Right side indicator */}
+                {task.link ? (
+                  isDone ? (
+                    <CheckCircle2 size={20} className="text-[#FF3DA5]" />
+                  ) : isVerifying ? (
+                    <Loader2 size={20} className="text-[#FF3DA5] animate-spin" />
+                  ) : (
+                    <ArrowRight size={18} className="text-[#FF3DA5] transition-transform duration-300 group-hover:translate-x-0.5" />
+                  )
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => toggleCheck(i)}
-                    className="flex items-center justify-center transition-transform duration-200 active:scale-90"
-                  >
-                    {checks[i] ? (
-                      <CheckCircle2 size={20} className="text-[#FF3DA5]" />
-                    ) : (
-                      <Circle size={20} className="text-white/40" />
-                    )}
-                  </button>
+                  <ArrowRight size={18} className="text-[#FF3DA5] transition-transform duration-300 group-hover:translate-x-0.5" />
                 )}
               </div>
 
+              {/* Verifying label */}
+              {isVerifying && (
+                <p className="mt-1 text-xs text-white/40" style={{ fontFamily: "var(--font-roadgeek)" }}>
+                  Verifying...
+                </p>
+              )}
+
+              {/* Text input for tasks with hasInput */}
               {task.hasInput && (
                 <input
                   type="text"
                   value={inputs[i]}
-                  placeholder={i === 3 ? "Paste quote tweet link..." : "Paste comment link..."}
+                  placeholder={i === 2 ? "Paste quote tweet link..." : "Paste comment link..."}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
                     const next = [...inputs];
                     next[i] = e.target.value;
@@ -191,10 +218,10 @@ export default function WhitelistForm() {
 
       <button
         onClick={handleSubmit}
-        disabled={status === "loading"}
+        disabled={submitStatus === "loading"}
         className={`${anton.className} mt-2 flex h-12 w-full items-center justify-center rounded-xl bg-[#FF3DA5] text-2xl uppercase tracking-wide text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#e63595] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100`}
       >
-        {status === "loading" ? "Submitting..." : "Submit Application"}
+        {submitStatus === "loading" ? "Submitting..." : "Submit Application"}
       </button>
 
       <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-sm text-black/60" style={{ fontFamily: "var(--font-roadgeek)" }}>
