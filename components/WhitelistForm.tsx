@@ -19,12 +19,14 @@ function XLogo({ size, className }: { size: number; className?: string }) {
 }
 
 // Tasks: hasInput = has text field, hasInput = false = checkbox only
+const X_URL = "https://x.com/nobodiesclubnft";
+
 const tasks = [
-  { label: "Follow on X",          key: "follow_on_x",       hasInput: false },
-  { label: "Like the announcement", key: "like_announcement", hasInput: false },
-  { label: "RT x",                  key: "rt_x",              hasInput: false },
-  { label: "Quote the post",        key: "quote_post",        hasInput: true  },
-  { label: "Comment & Tag 2 friend",key: "comment_tag",       hasInput: true  },
+  { label: "Follow on X",           key: "follow_on_x",       hasInput: false, link: X_URL },
+  { label: "Like the announcement",  key: "like_announcement",  hasInput: false, link: X_URL },
+  { label: "RT x",                   key: "rt_x",               hasInput: false, link: X_URL },
+  { label: "Quote the post",         key: "quote_post",          hasInput: true,  link: null  },
+  { label: "Comment & Tag 2 friend", key: "comment_tag",         hasInput: true,  link: null  },
 ];
 
 const taskIcons = [XLogo, Heart, XLogo, MessageSquare, UserPlus];
@@ -117,7 +119,19 @@ export default function WhitelistForm() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Icon size={18} className="text-white" />
-                  <span style={{ fontFamily: "var(--font-roadgeek)" }}>{task.label}</span>
+                  {task.link ? (
+                    <a
+                      href={task.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[#FF3DA5] transition-colors duration-200 underline-offset-2 hover:underline"
+                      style={{ fontFamily: "var(--font-roadgeek)" }}
+                    >
+                      {task.label}
+                    </a>
+                  ) : (
+                    <span style={{ fontFamily: "var(--font-roadgeek)" }}>{task.label}</span>
+                  )}
                 </div>
 
                 {task.hasInput ? (
