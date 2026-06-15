@@ -1,6 +1,8 @@
 import bgImage from "../../img/IMG_2883.jpg";
 import WhitelistForm from "@/components/WhitelistForm";
 
+export const dynamic = "force-dynamic";
+
 export default function WhitelistPage() {
   return (
     <div
