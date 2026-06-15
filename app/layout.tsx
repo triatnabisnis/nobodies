@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import Navbar from "@/components/Navbar";
+import "./globals.css";
+
+const roadgeek = localFont({
+  src: "../font/Roadgeek2005Mittelschrift-1G6v.ttf",
+  variable: "--font-roadgeek",
+});
+
+export const metadata: Metadata = {
+  title: "Nobodies",
+  description: "Nobodies",
+  icons: {
+    icon: "/nobody.ico",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${roadgeek.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: "var(--font-roadgeek)" }}>
+        <Navbar />
+        {children}
+      </body>
+    </html>
+  );
+}
