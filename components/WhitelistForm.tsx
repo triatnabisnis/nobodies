@@ -18,13 +18,14 @@ function XLogo({ size, className }: { size: number; className?: string }) {
   );
 }
 
-const X_URL = "https://x.com/nobodiesclubnft";
+const X_URL    = "https://x.com/nobodiesclubnft";
+const TWEET_URL = "https://x.com/NobodiesclubNFT/status/2066560613762113750?s=20";
 
 const tasks = [
-  { label: "Follow on X",             key: "follow_on_x",       hasInput: false, link: X_URL },
-  { label: "Like & RT the announcement", key: "like_announcement", hasInput: false, link: X_URL },
-  { label: "Quote the post",           key: "quote_post",         hasInput: true,  link: null  },
-  { label: "Comment & Tag 2 friend",   key: "comment_tag",        hasInput: true,  link: null  },
+  { label: "Follow on X",               key: "follow_on_x",       hasInput: false, link: X_URL     },
+  { label: "Like & RT the announcement", key: "like_announcement", hasInput: false, link: TWEET_URL },
+  { label: "Quote the post",             key: "quote_post",        hasInput: true,  link: null       },
+  { label: "Comment & Tag 2 friend",     key: "comment_tag",       hasInput: true,  link: null       },
 ];
 
 const taskIcons = [XLogo, Heart, MessageSquare, UserPlus];
