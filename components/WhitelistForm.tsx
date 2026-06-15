@@ -62,11 +62,18 @@ export default function WhitelistForm() {
     }, 2500);
   }
 
+  // Requirements: link-tasks must be "done", input-tasks must have text, wallet must be filled
+  const requirements = [
+    { label: "Follow on X",               met: taskStates[0] === "done" },
+    { label: "Like & RT the announcement", met: taskStates[1] === "done" },
+    { label: "Quote the post",             met: inputs[2].trim().length > 0 },
+    { label: "Comment & Tag 2 friend",     met: inputs[3].trim().length > 0 },
+    { label: "EVM address",               met: wallet.trim().length > 0 },
+  ];
+  const canSubmit = requirements.every((r) => r.met);
+
   async function handleSubmit() {
-    if (!wallet.trim()) {
-      setErrMsg("EVM address is required.");
-      return;
-    }
+    if (!canSubmit) return;
 
     setSubmitStatus("loading");
     setErrMsg("");
@@ -210,6 +217,28 @@ export default function WhitelistForm() {
         style={{ fontFamily: "var(--font-roadgeek)" }}
       />
 
+      {/* Requirements checklist */}
+      {!canSubmit && (
+        <div className="mt-2 rounded-xl border border-white/10 bg-black px-4 py-3 flex flex-col gap-1">
+          <p className="text-xs text-white/40 uppercase tracking-widest mb-1" style={{ fontFamily: "var(--font-roadgeek)" }}>Requirements</p>
+          {requirements.map((req, i) => (
+            <div key={i} className="flex items-center gap-2">
+              {req.met ? (
+                <CheckCircle2 size={14} className="text-[#FF3DA5] shrink-0" />
+              ) : (
+                <div className="w-3.5 h-3.5 rounded-full border border-white/30 shrink-0" />
+              )}
+              <span
+                className={`text-xs ${req.met ? "text-white/60 line-through" : "text-white/80"}`}
+                style={{ fontFamily: "var(--font-roadgeek)" }}
+              >
+                {req.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {errMsg && (
         <p className="mt-1.5 text-sm text-red-400" style={{ fontFamily: "var(--font-roadgeek)" }}>
           {errMsg}
@@ -218,8 +247,12 @@ export default function WhitelistForm() {
 
       <button
         onClick={handleSubmit}
-        disabled={submitStatus === "loading"}
-        className={`${anton.className} mt-2 flex h-12 w-full items-center justify-center rounded-xl bg-[#FF3DA5] text-2xl uppercase tracking-wide text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#e63595] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100`}
+        disabled={!canSubmit || submitStatus === "loading"}
+        className={`${anton.className} mt-2 flex h-12 w-full items-center justify-center rounded-xl text-2xl uppercase tracking-wide shadow-lg transition-all duration-300 ${
+          canSubmit
+            ? "bg-[#FF3DA5] text-black hover:scale-105 hover:bg-[#e63595] cursor-pointer"
+            : "bg-white/10 text-white/30 cursor-not-allowed"
+        } disabled:scale-100`}
       >
         {submitStatus === "loading" ? "Submitting..." : "Submit Application"}
       </button>
