@@ -64,7 +64,7 @@ export default function WhitelistForm() {
 
   async function handleSubmit() {
     if (!wallet.trim()) {
-      setErrMsg("EVM address wajib diisi.");
+      setErrMsg("EVM address is required.");
       return;
     }
 
