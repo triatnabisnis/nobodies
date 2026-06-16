@@ -27,6 +27,26 @@ export default function Home() {
           className="absolute left-0 right-0 top-20 bottom-0 bg-cover bg-top max-[765px]:min-[421px]:bg-center block md:hidden"
           style={{ backgroundImage: `url(${bgMobile.src})` }}
         />
+
+        {/* JOIN WHITELIST CTA Button */}
+        <div className="absolute bottom-8 md:bottom-10 left-0 right-0 flex flex-col items-center gap-2 z-10">
+          <a
+            href="/whitelist"
+            id="join-whitelist-cta"
+            className="inline-flex items-center gap-2 md:gap-3 px-7 py-3 md:px-10 md:py-4 rounded-full font-extrabold text-black uppercase tracking-widest border-2 border-black"
+            style={{
+              background: "#fed136",
+              fontFamily: "var(--font-league-spartan, League Spartan, sans-serif)",
+              fontSize: "clamp(0.85rem, 3vw, 1.15rem)",
+              letterSpacing: "0.15em",
+            }}
+          >
+            JOIN WHITELIST
+          </a>
+          <p className="text-white text-xs md:text-sm font-semibold tracking-wider drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+            Spots are limited — secure yours now
+          </p>
+        </div>
       </section>
 
       <section
